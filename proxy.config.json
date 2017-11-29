@@ -1,0 +1,7 @@
+{
+  "/learn/api/public/*": {
+    "target": "<Your Learn Domain>",
+    "secure": false,
+    "logLevel": "debug"
+  }
+}
