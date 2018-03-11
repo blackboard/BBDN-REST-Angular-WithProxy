@@ -5,6 +5,7 @@ import { Http } from '@angular/http';
 import { Headers } from '@angular/http';
 import { RequestOptions } from '@angular/http';
 import { NgForm } from '@angular/forms';
+import {Router, ActivatedRoute, Params} from '@angular/router';
 
 
 @Component({
@@ -17,11 +18,13 @@ export class NewUserFormComponent implements OnInit {
   public user: User;
 
   // THIS IS NOT PRODUCTION CODE! NEVER PUT YOUR KEY AND SECRET DIRECTLY IN CODE!
-  private oauthKey = '<Your Key Here>';
-  private oauthSecret = '<Your Secret Here>';
+  private oauthKey = 'YOUR_REST_APP_KEY';
+  private oauthSecret = 'YOUR_REST_APP_SECRET';
   private basicAuthString = this.oauthKey + ':' + this.oauthSecret;
 
-  constructor(private http: Http) {}
+  authCode = '';
+
+  constructor(private http: Http, private activatedRoute: ActivatedRoute) {}
 
     ngOnInit() {
       this.user = {
@@ -31,14 +34,31 @@ export class NewUserFormComponent implements OnInit {
         first: '',
         last: ''
       };
+
+      // subscribe to router event
+      this.activatedRoute.queryParams.subscribe((params: Params) => {
+        if (params['code'] != null ) {
+          this.authCode = params['code'];
+          console.log(this.authCode);
+        };
+      });
+
     };
     createUser(newUserForm: NgForm, model: User, isValid: boolean) {
+
 
       const basicAuth = 'Basic ' + btoa(this.basicAuthString);
       let token = 'Bearer ';
 
       const userUrl = '/learn/api/public/v1/users';
-      const tokenUrl = '/learn/api/public/v1/oauth2/token?grant_type=client_credentials';
+      let tokenUrl = '';
+
+      if (this.authCode !== '') {
+        tokenUrl = '/learn/api/public/v1/oauth2/token?grant_type=authorization_code&code=' +
+        this.authCode + '&redirect_uri=http://localhost:4200';
+      } else {
+        tokenUrl = '/learn/api/public/v1/oauth2/token?grant_type=client_credentials';
+      }
 
       let headers = new Headers({ 'Content-Type': 'application/x-www-form-urlencoded',
           'Authorization': basicAuth });
